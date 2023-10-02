@@ -1,10 +1,12 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { initializeApp } from 'firebase/app';
 import 'firebase/database';
+import { createRoot } from 'react-dom/client';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
 
 
 const firebaseConfig = {
@@ -19,14 +21,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 console.log(app)
 
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
+
 
 reportWebVitals();

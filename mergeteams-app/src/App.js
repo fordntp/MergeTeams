@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { onSnapshot } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import LoginPage from './component/loginPage';
+import Homepage from './component/homepage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBArKezZu3iFNLPLZ3RcBBPy0sFqCnZ-Lc",
@@ -15,43 +19,46 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
+const auth = getAuth(app);
 
 function App() {
-  const [teamData, setTeamData] = useState([]);
-
+  const [user, setUser] = useState(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Reference to the "appData" collection
-        const appDataCollection = collection(firestore, 'appData');
-
-        // Get data from the "appData" collection
-        const snapshot = await getDocs(appDataCollection);
-
-        // Extract the data from the snapshot
-        const teamDataArray = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setTeamData(teamDataArray);
+        const unsubscribeUser = onAuthStateChanged(auth, (user) => {
+          setUser(user);
+        });
+  
+        return () => {
+          // Unsubscribe when the component unmounts
+          unsubscribeUser();
+        };
       } catch (error) {
         console.error('Error fetching data:', error.message);
       }
     };
-
+  
     fetchData();
-  }, [firestore]);
+  }, [auth]);
+  
 
   return (
-    <div className="App">
-      <h1>Team Data from Firestore</h1>
-      <ul>
-        {teamData.map((teamMember) => (
-          <li key={teamMember.id}>{teamMember.name}</li>
-        ))}
-      </ul>
+    <div className="App" >
+      <div>
+      <Homepage />
+      {user ? (
+        <div>
+          <h1>Welcome, {user.displayName}!</h1>
+          <p>Email: {user.email}</p>
+          <button className='btn btn-blue' onClick={() => auth.signOut()}>Sign out</button>
+        </div>
+      ) : (
+        <LoginPage auth={auth} />
+      )}
     </div>
+    </div>
+    
   );
 }
 
